@@ -6,7 +6,7 @@ export const EventList = (props) => {
   return (
     <ul>
       {items.map((event) => (
-        <EventItem key={event.id} title={event.title} />
+        <EventItem key={event.id} {...event} />
       ))}
     </ul>
   );
