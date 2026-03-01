@@ -1,6 +1,10 @@
 import { useRouter } from "next/router";
 import { getFilteredEvents } from "../../../dummy-data";
 import { EventList } from "../../../components/events/event-list";
+import { Fragment } from "react/jsx-runtime";
+import { ResultsTitle } from "../../../components/events/results-title";
+import { Button } from "../../../components/ui/button";
+import { ErrorAlert } from "../../../components/events/error-alert";
 
 function FilteredEventsPage() {
   const router = useRouter();
@@ -13,7 +17,16 @@ function FilteredEventsPage() {
   const numericMonth = parseInt(router.query.slug[1]);
 
   if (isNaN(numericYear) || isNaN(numericMonth) || numericYear > 2030 || numericYear < 2021 || numericMonth < 1 || numericMonth > 12) {
-    return <p className='center'>Invalid filter. Please adjust your values!</p>;
+    return (
+      <Fragment>
+        <ErrorAlert>
+          <p>Invalid filter. Please adjust your values!</p>
+        </ErrorAlert>
+        <div className='center'>
+          <Button link='/events'>Show all events</Button>
+        </div>
+      </Fragment>
+    );
   }
 
   const filteredEvents = getFilteredEvents({
@@ -22,14 +35,23 @@ function FilteredEventsPage() {
   });
 
   if (!filteredEvents || filteredEvents.length === 0) {
-    return <p className='center'>No events found for the chosen filter!</p>;
+    return (
+      <Fragment>
+        <ErrorAlert>
+          <p>No events found for the chosen filter!</p>
+        </ErrorAlert>
+        <div className='center'>
+          <Button link='/events'>Show all events</Button>
+        </div>
+      </Fragment>
+    );
   }
 
   return (
-    <div>
-      <h1>Filtered Events Page</h1>
+    <Fragment>
+      <ResultsTitle date={new Date(numericYear, numericMonth - 1)} />
       <EventList items={filteredEvents} />
-    </div>
+    </Fragment>
   );
 }
 export default FilteredEventsPage;
