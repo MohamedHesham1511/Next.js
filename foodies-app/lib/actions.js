@@ -7,7 +7,7 @@ const isInvalidText = (text) => {
   return !text || text.trim() === "";
 };
 
-export const shareMeal = async (prevState, formData) => {
+export const shareMeal = async (_prevState, formData) => {
   const meal = {
     title: formData.get("title"),
     summary: formData.get("summary"),
