@@ -251,3 +251,70 @@ export default function TeamMemberPage({ params }) {
 - Its content can mirror `page.js`, show a skeleton/placeholder, or simply `return null`
 - It is evaluated on **hard navigations and full-page loads only**; soft navigations always use the matched slot page
 - Think of it as the parallel-routes equivalent of a `404` safety fallback, but instead of an error it renders graceful content
+
+---
+
+### 2.3 Catch-All and Optional Catch-All (Fallback) Routes
+
+Next.js supports two special dynamic segment conventions that let a single `page.js` file match an **arbitrary number of URL segments**.
+
+#### Catch-All Routes — `[...slug]`
+
+Created by naming a folder `[...slug]`. Matches **one or more** path segments after the base path. The matched segments are available as an array on `params.slug`.
+
+```
+app/
+  docs/
+    [...slug]/
+      page.js    ← matches /docs/a, /docs/a/b, /docs/a/b/c, …
+```
+
+```javascript
+// app/docs/[...slug]/page.js
+export default function DocsPage({ params }) {
+  // params.slug is an array, e.g. ['a', 'b', 'c'] for /docs/a/b/c
+  return <div>Docs: {params.slug.join(" / ")}</div>;
+}
+```
+
+> `/docs` itself is **not** matched — it requires at least one segment.
+
+#### Optional Catch-All Routes (Fallback) — `[[...slug]]`
+
+Created by wrapping the folder name in **double square brackets**: `[[...slug]]`. Works exactly like `[...slug]` but also matches the **base path with zero segments**.
+
+```
+app/
+  docs/
+    [[...slug]]/
+      page.js    ← matches /docs, /docs/a, /docs/a/b, …
+```
+
+```javascript
+// app/docs/[[...slug]]/page.js
+export default function DocsPage({ params }) {
+  // params.slug is undefined when visiting /docs (no segments)
+  // params.slug is ['a', 'b'] when visiting /docs/a/b
+  const segments = params.slug ?? [];
+  return <div>Docs: {segments.length ? segments.join(" / ") : "Home"}</div>;
+}
+```
+
+#### Why Use Catch-All / Optional Catch-All Routes?
+
+| Use case                                                          | Recommended convention |
+| ----------------------------------------------------------------- | ---------------------- |
+| Documentation pages (`/docs/guide/intro`)                         | `[...slug]`            |
+| CMS or blog with deeply nested categories                         | `[...slug]`            |
+| A single entry-point page that also handles its own root URL      | `[[...slug]]`          |
+| Internationalized routes where the locale prefix is optional      | `[[...slug]]`          |
+| Catch-all 404 fallback — handle any unmatched path under a prefix | `[[...slug]]`          |
+
+The **optional** variant (`[[...slug]]`) is commonly called a **fallback route** because it acts as a single catch-all handler for an entire URL subtree, including the root, without needing a separate `page.js` one level up.
+
+#### Key Points
+
+- `params.slug` is always an **array of strings** for `[...slug]`, and **`undefined`** (not an empty array) for `[[...slug]]` when no segments are present — always guard with `?? []`
+- Both conventions work in the **App Router** (Next.js 13+) and the legacy **Pages Router** (`pages/docs/[...slug].js`)
+- More specific static or dynamic routes always take **priority** over catch-all segments: `/docs/intro` matches `docs/intro/page.js` before `docs/[...slug]/page.js`
+- You cannot have both `[...slug]` and `[[...slug]]` under the same parent — they would conflict
